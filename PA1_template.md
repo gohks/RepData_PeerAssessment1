@@ -1,12 +1,8 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 Load required libraries and set options
-```{r}
+
+```r
 library(ggplot2)
 options(scipen=999)
 ```
@@ -14,14 +10,16 @@ options(scipen=999)
 ## Loading and preprocessing the data
 
 1. Load the data
-```{r} 
+
+```r
 setwd("~/GitHub/RepData_PeerAssessment1")
 unzip(zipfile="activity.zip")
 data <- read.csv("activity.csv", as.is=T)
 ```
 
 2. Process/transform the data by removing NAs
-```{r}
+
+```r
 data1 <- na.omit(data)
 ```
 
@@ -29,29 +27,46 @@ data1 <- na.omit(data)
 
 1. Make a histogram of the total number of steps taken each day
 
-```{r}
+
+```r
 dailyTotal <- tapply(data1$steps,data1$date,FUN=sum,na.rm=T)
 hist(dailyTotal,xlab="Total Steps taken each day")
 ```
 
+![plot of chunk unnamed-chunk-4](./PA1_template_files/figure-html/unnamed-chunk-4.png) 
+
 2. Calculate and report the mean and median total number of steps taken per day
-```{r}
+
+```r
 mean(dailyTotal)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(dailyTotal)
 ```
 
-The mean daily total number of steps is `r mean(dailyTotal)`, the median daily total number of steps is `r median(dailyTotal)`
+```
+## [1] 10765
+```
+
+The mean daily total number of steps is 10766.1887, the median daily total number of steps is 10765
 
 ## What is the average daily activity pattern?
 
 1.Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days 
   a.Prepare data for plotting
-```{r}
+
+```r
 averageSteps <- aggregate(x=list(steps=data1$steps),by=list(interval=data1$interval), FUN=mean,na.rm=T)
 ```
 
   b.Plot average number of steps, averaged across all days
-```{r}
+
+```r
 ggplot(data=averageSteps,aes(x=interval,y=steps))+
 geom_line()+
 xlab("5-minute interval")+
@@ -59,29 +74,38 @@ ylab("Average number of steps")+
 ggtitle("Average number of steps, averaged across all days")
 ```
 
+![plot of chunk unnamed-chunk-7](./PA1_template_files/figure-html/unnamed-chunk-7.png) 
+
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
 
-```{r}
+
+```r
 max_steps <- which.max(averageSteps$steps)
 interval <- averageSteps[max_steps,]$interval
 ```
 
-The `r interval` interval has the maximum number of steps.
+The 835 interval has the maximum number of steps.
 
 ## Imputing missing values
 
 1. Calculate number of missing values in dataset 
-```{r}
+
+```r
 incomplete <- data[!complete.cases(data),]
 
 nrow(incomplete)
 ```
-There are `r nrow(incomplete)` rows with missing values
+
+```
+## [1] 2304
+```
+There are 2304 rows with missing values
 
 2. Devise strategy for filling in all of the missing values in the dataset.
 
 Strategy is to use the interval average, averaged across days
-```{r}
+
+```r
 imputeValue <- function(steps,interval) {
   out <- NA
   if(!is.na(steps))
@@ -93,21 +117,39 @@ imputeValue <- function(steps,interval) {
 ```
 
 3. Create an new dataset that is equal to original dataset but with missing data filled in
-```{r}
+
+```r
  data2 <- data
  data2$steps <- mapply(imputeValue,data2$steps,data2$interval)
 ```
 
 4. Make histogram of the total number of steps, calculate and report mean and median total number of steps per day.  
 
-```{r}
+
+```r
 newDailyTotal <- tapply(data2$steps,data2$date,FUN=sum,na.rm=T)
 hist(newDailyTotal,xlab="Total Steps taken each day")
+```
+
+![plot of chunk unnamed-chunk-12](./PA1_template_files/figure-html/unnamed-chunk-12.png) 
+
+```r
 mean(newDailyTotal)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(newDailyTotal)
 ```
 
-The mean daily total number of steps is `r mean(newDailyTotal)`, the median daily total number of steps is `r median(newDailyTotal)`
+```
+## [1] 10766
+```
+
+The mean daily total number of steps is 10766.1887, the median daily total number of steps is 10766.1887
 
 The imputation of missing values did not change the mean but changed the median slightly. 
 
@@ -116,15 +158,18 @@ The imputation of missing values did not change the mean but changed the median 
 1. Create a new factor varialbes in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day. 
 
   a. Convert date in dataframe to Date type.
-```{r}
+
+```r
 data2$date <- as.Date(data2$date,"%Y-%m-%d")
 ```
   b. Use weekdays function to determine day of the week for each date 
-```{r}
+
+```r
 data2$day <- weekdays(data2$date)
 ```
   c. Determine if day is weekday or weekend, add this to dayType column in dataframe
-```{r}
+
+```r
 data2$dayType <- c("Unknown")
 
 for(i in 1:nrow(data2)){
@@ -139,12 +184,14 @@ for(i in 1:nrow(data2)){
 
 a. Aggregate data
 
-```{r}
+
+```r
 averageSteps2 <- aggregate(steps ~ interval + dayType, data=data2, FUN=mean)
 ```
 b. Plot panel plot 
 
-```{r}
+
+```r
 ggplot(averageSteps2,aes(interval,steps))+
 geom_line()+
 facet_grid(dayType ~.)+
@@ -152,3 +199,5 @@ xlab("Average number of steps for each 5-minute interval")+
 ylab("Number of steps")+
 ggtitle("Average number of steps, averaged across all days, by day type")
 ```
+
+![plot of chunk unnamed-chunk-17](./PA1_template_files/figure-html/unnamed-chunk-17.png) 
